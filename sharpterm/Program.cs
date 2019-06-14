@@ -4,6 +4,7 @@ using System.IO;
 using System.Linq;
 using System.Net;
 using System.Numerics;
+using System.Threading.Tasks;
 using Veldrid;
 using Veldrid.Sdl2;
 using Veldrid.StartupUtilities;
@@ -18,16 +19,10 @@ namespace GettingStarted
     {
         private static GraphicsDevice _graphicsDevice;
         private static CommandList _commandList;
-        private static DeviceBuffer _vertexBuffer;
-        private static DeviceBuffer _indexBuffer;
-        private static Shader[] _shaders;
-        private static Pipeline _pipeline;
-        private static ResourceSet _textureSet;
 
         private static DeviceBuffer _projectionBuffer;
-        private static ResourceSet _projectionSet;
 
-        private static TextLayout _textArray;
+        private static TextLayout _textLayout;
         private static BufferWindow _textWindow;
         private static TextArrayRenderer _textRenderer;
 
@@ -35,7 +30,7 @@ namespace GettingStarted
         {
             WindowCreateInfo windowCI = new WindowCreateInfo()
             {
-                X = 100,
+                X = 1920,
                 Y = 100,
                 WindowWidth = 1920,
                 WindowHeight = 1920,
@@ -47,31 +42,29 @@ namespace GettingStarted
 
             CreateResources(window);
 
+            var pty = new LinuxPty();
+            var readStream =  new ConsoleLoggingStream(pty.ReadStream, "READ");
+            var writeStream = new ConsoleLoggingStream(pty.WriteStream, "WRIT");
+            
+            var inputProcessor = new InputKeyStreamer
+            {
+                ScreenWriter = _textLayout,
+                OutStream = writeStream
+            };
+#pragma warning disable 4014
+            PipePtyToScreen(readStream);
+#pragma warning restore 4014
+
             while (window.Exists)
             {
-                window.PumpEvents();
+                var input = window.PumpEvents();
+                inputProcessor.ProcessToStream(input);
 
-                if (window.Exists)
-                {
-                    Draw();
-                }
+                if (window.Exists) Draw();
             }
 
             DisposeResources();
         }
-
-        public class CharCell
-        {
-            public float X { get; set; }
-            public float Y { get; set; }
-            public float W { get; set; }
-            public float H { get; set; }
-            public float R => X + W;
-            public float B => Y + H;
-            public float Aspect => W / H;
-        }
-
-        private static CharCell[] Cells = new CharCell[256];
 
         private static void CreateResources(Sdl2Window window)
         {
@@ -92,52 +85,31 @@ namespace GettingStarted
             var buffer = new TextBuffer((uint)charsWidth, 1000);
             _textWindow = new BufferWindow(buffer, buffer.Width, (uint)charsHeight);
             _textRenderer = new TextArrayRenderer(_graphicsDevice, _textWindow, charAtlas, _projectionBuffer);
-            _textArray = new TextLayout(buffer);
+            _textLayout = new TextLayout(buffer);
             
             _commandList = _graphicsDevice.ResourceFactory.CreateCommandList();
         }
-
-        private static long _lastFrame = Stopwatch.GetTimestamp();
-        private static double[] _rates = new double[100];
-        private static int _rateIdx = 0;
-
-        private static DateTime _nextScroll = DateTime.UtcNow.AddSeconds(1);
+        
+        private static async Task PipePtyToScreen(Stream readStream)
+        {
+            var buffer = new byte[128];
+            while (true)
+            {
+                int read = await readStream.ReadAsync(buffer, 0, buffer.Length);
+                for (int i = 0; i < read; ++i)
+                    _textLayout.Write((char) buffer[i]);
+            }
+        }
 
         private static void Draw()
         {
-            var now = Stopwatch.GetTimestamp();
-            var elapsed = (now - _lastFrame) / (double)Stopwatch.Frequency;
-            _rates[_rateIdx++ % _rates.Length] = 1.0 / elapsed;
-            _lastFrame = now;
-
-            var fps = _rates.Sum() / _rates.Length;
-            _textArray.CursorLeft = 0;
-            _textArray.CursorTop = 0;
-            _textArray.Write($@"Hello world!
-The time is {DateTime.Now}
-{fps,6:F1} FPS
-Lorem ipsum dolor sit amet, consectetur adipiscing elit. Donec non libero id sem elementum pretium ut ac justo. Donec a tellus nulla. Ut pretium justo nec justo feugiat, quis molestie lorem iaculis. Ut ut pellentesque mi, nec bibendum nulla. Duis elementum tortor ut eros laoreet, rhoncus mollis massa pretium. Phasellus vitae purus arcu. Duis fringilla diam luctus est facilisis dapibus. Cras faucibus fermentum quam ac varius. Aliquam erat volutpat. Etiam a sapien nec odio aliquet lacinia a non libero.
-
-Sed malesuada risus purus, vulputate fringilla urna congue eu. Sed varius nibh vitae sagittis fermentum. Etiam sed augue ac lacus dignissim euismod. Maecenas auctor sem nibh, in ultricies enim eleifend quis. Etiam maximus, lacus ut viverra blandit, mauris libero tempor nisi, vel venenatis libero mauris a sapien. Cras ornare accumsan arcu, ut pulvinar lacus porttitor sit amet. Curabitur vehicula id diam cursus eleifend. Nam laoreet orci nisi, ut tincidunt elit tristique sit amet. Nulla gravida porta augue a auctor. Duis elit lectus, euismod dignissim risus non, mollis ultricies elit. Pellentesque dui dolor, ultrices in egestas vel, viverra ac nisi. Phasellus nulla mi, viverra sit amet tellus et, tristique tempor tellus.
-
-In placerat viverra nunc vel viverra. Nulla consequat lorem et ipsum porttitor pulvinar. Fusce fermentum, risus non sollicitudin viverra, metus velit mollis urna, sit amet sollicitudin massa urna ut justo. Phasellus ac leo magna. Aliquam feugiat maximus purus, ut condimentum nunc ultricies et. Vivamus nec dolor quis leo faucibus tempor. Vivamus sollicitudin rhoncus libero, eget egestas mauris dictum euismod. Morbi a purus ut purus commodo ullamcorper sit amet blandit dolor. Ut congue ultrices dignissim.
-
-Vestibulum non accumsan mauris, eu accumsan eros. Nulla vulputate massa at ligula condimentum mollis. Sed ac varius turpis. Nullam tempus felis quis mauris varius condimentum. Ut quis justo ut nisl vehicula gravida. Fusce quis ante eu felis gravida gravida. Ut eu arcu lectus. Cras eu felis efficitur, dapibus lectus eget, ultricies est. Curabitur cursus varius pulvinar. Vivamus accumsan sem non nunc feugiat, nec euismod metus mollis. Vivamus pretium mauris vitae cursus scelerisque.
-
-Cras facilisis quam lacus, vitae convallis velit commodo sed. Praesent suscipit ipsum arcu, ut tempor leo sodales sit amet. Praesent a sem mi. Nullam sed fermentum dui. In imperdiet rutrum orci, et ullamcorper velit congue vitae. Pellentesque urna enim, finibus ut lectus a, pellentesque vulputate orci. Aenean bibendum orci et magna dignissim aliquet nec et turpis. Fusce risus erat, laoreet at odio a, aliquet finibus est. Integer dictum rhoncus rhoncus. Ut tempus ut enim vel sodales. Morbi nec felis sed lorem condimentum porttitor ut id arcu. Pellentesque placerat in massa id iaculis. Nulla a laoreet nibh. Etiam finibus lorem neque, aliquet iaculis mauris porta at. Sed sed erat id mi euismod pretium. Quisque vehicula rutrum odio in commodo.");
-
-            if (DateTime.UtcNow >= _nextScroll)
-            {
-                _textWindow.OffsetY++;
-                _nextScroll = _nextScroll.AddSeconds(1);
-            }
-            
             // Begin() must be called before commands can be issued.
             _commandList.Begin();
             
             // We want to render directly to the output window.
             _commandList.SetFramebuffer(_graphicsDevice.SwapchainFramebuffer);
             _commandList.ClearColorTarget(0, RgbaFloat.Clear);
+            _commandList.SetViewport(0, new Viewport(50, 50, 1820, 1820, 0, 1));
 
             _textRenderer.Render(_commandList);
 
