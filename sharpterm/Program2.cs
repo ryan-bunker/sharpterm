@@ -14,7 +14,7 @@ using Veldrid.Sdl2;
 using Veldrid.SPIRV;
 using Veldrid.StartupUtilities;
 
-namespace sharpterm
+namespace SharpTerm
 {
     internal class Program2
     {
