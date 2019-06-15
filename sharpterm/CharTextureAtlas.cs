@@ -49,6 +49,8 @@ namespace SharpTerm
 
         public Cell this[char c] => _cells[c];
 
+        public int Count => _cells.Length;
+
         public class Cell
         {
             public Vector2 TopLeft { get; }

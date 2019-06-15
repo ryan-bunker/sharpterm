@@ -84,7 +84,7 @@ namespace GettingStarted
             
             var buffer = new TextBuffer((uint)charsWidth, 1000);
             _textWindow = new BufferWindow(buffer, buffer.Width, (uint)charsHeight);
-            _textRenderer = new TextArrayRenderer(_graphicsDevice, _textWindow, charAtlas, _projectionBuffer);
+            _textRenderer = new TextArrayRenderer(_graphicsDevice, charAtlas, _projectionBuffer);
             _textLayout = new TextLayout(buffer);
             
             _commandList = _graphicsDevice.ResourceFactory.CreateCommandList();
@@ -111,7 +111,7 @@ namespace GettingStarted
             _commandList.ClearColorTarget(0, RgbaFloat.Clear);
             _commandList.SetViewport(0, new Viewport(10, 10, 1900, 1900, 0, 1));
 
-            _textRenderer.Render(_commandList);
+            _textRenderer.Render(_commandList, _textWindow);
 
             // End() must be called before commands can be submitted for execution.
             _commandList.End();
