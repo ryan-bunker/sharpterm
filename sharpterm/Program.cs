@@ -112,6 +112,7 @@ namespace GettingStarted
             _commandList.SetViewport(0, new Viewport(10, 10, 1900, 1900, 0, 1));
 
             _textRenderer.Render(_commandList, _textWindow);
+            _textRenderer.Render(_commandList, '_', _textLayout.CursorLeft, _textLayout.CursorTop);
 
             // End() must be called before commands can be submitted for execution.
             _commandList.End();
