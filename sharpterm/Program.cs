@@ -109,7 +109,7 @@ namespace GettingStarted
             // We want to render directly to the output window.
             _commandList.SetFramebuffer(_graphicsDevice.SwapchainFramebuffer);
             _commandList.ClearColorTarget(0, RgbaFloat.Clear);
-            _commandList.SetViewport(0, new Viewport(50, 50, 1820, 1820, 0, 1));
+            _commandList.SetViewport(0, new Viewport(10, 10, 1900, 1900, 0, 1));
 
             _textRenderer.Render(_commandList);
 
