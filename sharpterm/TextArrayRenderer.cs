@@ -15,7 +15,7 @@ namespace SharpTerm
         private readonly Pipeline _pipeline;
         private readonly ResourceSet _projectionTextureResourceSet;
 
-        public TextArrayRenderer(GraphicsDevice gd, CharTextureAtlas charAtlas, BindableResource projectionBuffer)
+        public TextArrayRenderer(GraphicsDevice gd, FontAtlas charAtlas, BindableResource projectionBuffer)
         {
             var factory = gd.ResourceFactory;
             

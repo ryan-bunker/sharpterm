@@ -5,14 +5,19 @@ using Veldrid;
 
 namespace SharpTerm
 {
-    public class CharTextureAtlas
+    public class FontAtlas
     {
         private readonly Cell[] _cells = new Cell[256];
 
-        public CharTextureAtlas(GraphicsDevice gd, Face face)
+        public FontAtlas(GraphicsDevice gd, string fontPath, uint fontSize)
         {
+            var face = new Face(new Library(), fontPath);
+            face.SetPixelSizes(fontSize, 0);
+            
             uint fontWidth = (uint)face.Size.Metrics.MaxAdvance.ToInt32();
             uint fontHeight = (uint)face.Size.Metrics.Height.ToInt32();
+            CellWidth = fontWidth;
+            CellHeight = fontHeight;
 
             Texture = gd.ResourceFactory.CreateTexture(new TextureDescription(
                 16 * fontWidth, 16 * fontHeight, 1, 1, 1,
@@ -27,6 +32,7 @@ namespace SharpTerm
                     y = fontHeight * (ci / 16);
                 }
                 face.LoadChar((uint)Char.ConvertToUtf32(c.ToString(), 0), LoadFlags.Render, LoadTarget.Normal);
+                face.Glyph.RenderGlyph(RenderMode.Normal);
                 var bmpIn = face.Glyph.Bitmap;
 	
                 uint xpos = x + (uint)face.Glyph.BitmapLeft;
@@ -50,6 +56,10 @@ namespace SharpTerm
         public Cell this[char c] => _cells[c];
 
         public int Count => _cells.Length;
+        
+        public uint CellWidth { get; }
+        
+        public uint CellHeight { get; }
 
         public class Cell
         {

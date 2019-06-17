@@ -69,22 +69,20 @@ namespace GettingStarted
         private static void CreateResources(Sdl2Window window)
         {
             // load font and build texture atlas
-            var face = new Face(new Library(), @"./Inconsolata-Regular.ttf");
-            face.SetPixelSizes(36, 0);
-            var charAtlas = new CharTextureAtlas(_graphicsDevice, face);
+            var fontAtlas = new FontAtlas(_graphicsDevice, @"./Inconsolata-Regular.ttf", 36);
             
             _projectionBuffer = _graphicsDevice.ResourceFactory.CreateBuffer(new BufferDescription(64, BufferUsage.UniformBuffer));
 
             // Update our projection
-            var charsWidth = window.Width / face.Size.Metrics.MaxAdvance.ToSingle();
-            var charsHeight = window.Height / face.Size.Metrics.Height.ToSingle();
+            var charsWidth = window.Width / (float) fontAtlas.CellWidth;
+            var charsHeight = window.Height / (float) fontAtlas.CellHeight;
             var scale = Matrix4x4.CreateScale(2f / charsWidth, -2f / charsHeight, 1);
             var translate = Matrix4x4.CreateTranslation(-1f, 1f, 0);
             _graphicsDevice.UpdateBuffer(_projectionBuffer, 0, scale * translate);
             
             var buffer = new TextBuffer((uint)charsWidth, 1000);
             _textWindow = new BufferWindow(buffer, buffer.Width, (uint)charsHeight);
-            _textRenderer = new TextArrayRenderer(_graphicsDevice, charAtlas, _projectionBuffer);
+            _textRenderer = new TextArrayRenderer(_graphicsDevice, fontAtlas, _projectionBuffer);
             _textLayout = new TextLayout(buffer);
             
             _commandList = _graphicsDevice.ResourceFactory.CreateCommandList();
