@@ -1,17 +1,10 @@
-using System;
-using System.Diagnostics;
 using System.IO;
-using System.Linq;
-using System.Net;
 using System.Numerics;
 using System.Threading.Tasks;
 using Veldrid;
 using Veldrid.Sdl2;
 using Veldrid.StartupUtilities;
-using Veldrid.SPIRV;
-using SharpFont;
 using SharpTerm;
-using Encoding = System.Text.Encoding;
 
 namespace GettingStarted
 {

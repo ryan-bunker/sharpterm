@@ -8,7 +8,7 @@
     </PropertyGroup>
 
     <ItemGroup>
-      <PackageReference Include="SharpFontStandard" Version="4.0.1" />
+      <PackageReference Include="SharpFontCore" Version="0.1.1" />
       <PackageReference Include="Veldrid" Version="4.6.1" />
       <PackageReference Include="Veldrid.ImGui" Version="5.69.0" />
       <PackageReference Include="Veldrid.SPIRV" Version="1.0.9" />

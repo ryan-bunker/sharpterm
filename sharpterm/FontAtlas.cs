@@ -1,5 +1,7 @@
 using System;
+using System.IO;
 using System.Numerics;
+using System.Runtime.InteropServices;
 using SharpFont;
 using Veldrid;
 
@@ -11,17 +13,25 @@ namespace SharpTerm
 
         public FontAtlas(GraphicsDevice gd, string fontPath, uint fontSize)
         {
-            var face = new Face(new Library(), fontPath);
-            face.SetPixelSizes(fontSize, 0);
-            
-            uint fontWidth = (uint)face.Size.Metrics.MaxAdvance.ToInt32();
-            uint fontHeight = (uint)face.Size.Metrics.Height.ToInt32();
+            FontFace font;
+            using (var fontFile = File.OpenRead(fontPath))
+                font = new FontFace(fontFile);
+
+            var faceMetrics = font.GetFaceMetrics(fontSize);
+            uint fontWidth = (uint) Math.Ceiling(font.GetGlyph('A', fontSize).HorizontalMetrics.LinearAdvance);
+            uint fontHeight = (uint) Math.Ceiling(faceMetrics.LineHeight);
             CellWidth = fontWidth;
             CellHeight = fontHeight;
 
             Texture = gd.ResourceFactory.CreateTexture(new TextureDescription(
                 16 * fontWidth, 16 * fontHeight, 1, 1, 1,
                 PixelFormat.R8_UNorm, TextureUsage.Sampled, TextureType.Texture2D));
+
+            var bytesNeeded = (int) (fontWidth * fontHeight);
+            // move bytesNeeded to the next 8 byte boundary, so we can very quickly fill it
+            // with zeros by writing int64's into memory instead of doing it byte by byte
+            bytesNeeded = (bytesNeeded + sizeof(long) - 1) & ~(sizeof(long) - 1);
+            var surface = new Surface {Bits = Marshal.AllocHGlobal(bytesNeeded)};
 
             uint x = 0, y = 0;
             for (uint ci = 0; ci < 256; ci++)
@@ -31,21 +41,31 @@ namespace SharpTerm
                     x = 0;
                     y = fontHeight * (ci / 16);
                 }
-                face.LoadChar((uint)Char.ConvertToUtf32(c.ToString(), 0), LoadFlags.Render, LoadTarget.Normal);
-                face.Glyph.RenderGlyph(RenderMode.Normal);
-                var bmpIn = face.Glyph.Bitmap;
-	
-                uint xpos = x + (uint)face.Glyph.BitmapLeft;
-                uint ypos = y - (uint)face.Glyph.BitmapTop + (uint)face.Size.Metrics.Ascender.ToInt32();
-                
+
                 _cells[ci] = new Cell(
                     x / (16f * fontWidth),
                     y / (16f * fontHeight),
                     1f / 16f,
                     1f / 16f);
 
-                gd.UpdateTexture(Texture, bmpIn.Buffer, (uint)(bmpIn.Rows * bmpIn.Width),
-                    xpos, ypos, 0, (uint)bmpIn.Width, (uint)bmpIn.Rows, 1, 0, 0);
+                var glyph = font.GetGlyph((char) ci, fontSize);
+                if (glyph == null || glyph.RenderWidth == 0 || glyph.RenderHeight == 0) continue;
+                
+                surface.Width = glyph.RenderWidth;
+                surface.Height = glyph.RenderHeight;
+                surface.Pitch = glyph.RenderWidth;
+
+                for (int i = 0; i < bytesNeeded; i += sizeof(long))
+                    Marshal.WriteInt64(surface.Bits, i, 0);
+                
+                glyph.RenderTo(surface);
+
+                uint xpos = x + (uint) Math.Floor(glyph.HorizontalMetrics.Bearing.X);
+                uint ypos = y - (uint) Math.Floor(glyph.HorizontalMetrics.Bearing.Y) +
+                            (uint) Math.Floor(faceMetrics.CellAscent);
+
+                gd.UpdateTexture(Texture, surface.Bits, (uint) (glyph.RenderWidth * glyph.RenderHeight),
+                    xpos, ypos, 0, (uint) glyph.RenderWidth, (uint) glyph.RenderHeight, 1, 0, 0);
 
                 x += fontWidth;
             }
