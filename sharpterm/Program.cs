@@ -38,12 +38,8 @@ namespace GettingStarted
             var pty = new LinuxPty();
             var readStream =  new ConsoleLoggingStream(pty.ReadStream, "READ");
             var writeStream = new ConsoleLoggingStream(pty.WriteStream, "WRIT");
-            
-            var inputProcessor = new InputKeyStreamer
-            {
-                ScreenWriter = _textLayout,
-                OutStream = writeStream
-            };
+
+            var inputProcessor = new InputKeyStreamer {OutStream = writeStream};
 #pragma warning disable 4014
             PipePtyToScreen(readStream);
 #pragma warning restore 4014

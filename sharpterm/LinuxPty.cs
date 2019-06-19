@@ -13,15 +13,6 @@ namespace SharpTerm
         private static extern int forkpty(out int amaster, string name, IntPtr termp, IntPtr winp);
 
         [DllImport("libc")]
-        private static extern int tcgetattr(int fd, IntPtr termios_p);
-
-        [DllImport("libc")]
-        private static extern int tcsetattr(int fd, int optional_actions, IntPtr termios_p);
-        
-        [DllImport("libc")]
-        private static extern void cfmakeraw(IntPtr termios_p);
-
-        [DllImport("libc")]
         private static extern int execv(string pathname, string[] argv);
 
         public LinuxPty()
@@ -34,13 +25,8 @@ namespace SharpTerm
             }
             else
             {
-                var termSettings = Marshal.AllocHGlobal(4 * 4 + 4 * 20);
-                tcgetattr(masterFd, termSettings);
-                cfmakeraw(termSettings);
-                tcsetattr(masterFd, TCSANOW, termSettings);
-
-                ReadStream = new FileStream(new SafeFileHandle(new IntPtr(masterFd), true), FileAccess.Read);
-                WriteStream = new FileStream(new SafeFileHandle(new IntPtr(masterFd), true), FileAccess.Write);
+                ReadStream = new FileStream(new SafeFileHandle(new IntPtr(masterFd), false), FileAccess.Read);
+                WriteStream = new FileStream(new SafeFileHandle(new IntPtr(masterFd), false), FileAccess.Write);
             }
         }
         

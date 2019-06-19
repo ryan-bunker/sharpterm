@@ -27,9 +27,7 @@ namespace SharpTerm
                     CursorLeft = 0;
                     break;
                 case '\n':
-                    // newline currently also contains CR behavior since this
-                    // is not yet platform independent
-                    CursorLeft = 0;
+                    // newline means move down a line
                     ++CursorTop;
                     break;
                 case '\t':
