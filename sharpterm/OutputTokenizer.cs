@@ -28,11 +28,12 @@ namespace SharpTerm
                             FlushEscapeParser();
                         else if (progress == true)
                         {
-                            var token = _escapeParser.GetToken();
-                            if (token == null)
+                            var tokens = _escapeParser.GetToken();
+                            if (tokens == null)
                                 FlushEscapeParser();
                             else
-                                _output.Write(token);
+                                foreach (var token in tokens)
+                                    _output.Write(token);
                             _escapeParser = null;
                         }
                     }

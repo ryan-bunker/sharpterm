@@ -1,6 +1,5 @@
-using System;
-using System.Collections;
 using System.Collections.Generic;
+using Veldrid;
 
 namespace SharpTerm
 {
@@ -29,14 +28,14 @@ namespace SharpTerm
             return _parser.Process(c);
         }
 
-        public Token GetToken() => _parser.GetToken();
+        public IEnumerable<Token> GetToken() => _parser.GetToken();
 
         public char[] GetChars() => _chars.ToArray();
 
         private abstract class Parser
         {
             public abstract bool? Process(in char c);
-            public abstract Token GetToken();
+            public abstract IEnumerable<Token> GetToken();
         }
 
         private class CsiParser : Parser
@@ -95,7 +94,7 @@ namespace SharpTerm
                 return false;
             }
 
-            public override Token GetToken()
+            public override IEnumerable<Token> GetToken()
             {
                 switch (_finalByte)
                 {
@@ -111,8 +110,54 @@ namespace SharpTerm
                             bounds = EraseLineToken.EraseBounds.CursorToEnd;
                         else
                             return null;
-                        return new EraseLineToken(bounds);
+                        return new[] {new EraseLineToken(bounds)};
                     
+                    case 'm':
+                        var codes = new string(_params.ToArray()).Split(';');
+                        if (codes.Length == 0)
+                            return new[] {new SgrResetToken()};
+                        var toks = new List<Token>();
+                        foreach (var code in codes)
+                        {
+                            switch (code.TrimStart('0'))
+                            {
+                                case "":
+                                    toks.Add(new SgrResetToken());
+                                    break;
+                                case "1":
+                                    toks.Add(new BoldToken(true));
+                                    break;
+                                case "30":
+                                    toks.Add(new Set8ColorToken(Set8ColorToken.ColorName.Black, true));
+                                    break;
+                                case "31":
+                                    toks.Add(new Set8ColorToken(Set8ColorToken.ColorName.Red, true));
+                                    break;
+                                case "32":
+                                    toks.Add(new Set8ColorToken(Set8ColorToken.ColorName.Green, true));
+                                    break;
+                                case "33":
+                                    toks.Add(new Set8ColorToken(Set8ColorToken.ColorName.Yellow, true));
+                                    break;
+                                case "34":
+                                    toks.Add(new Set8ColorToken(Set8ColorToken.ColorName.Blue, true));
+                                    break;
+                                case "35":
+                                    toks.Add(new Set8ColorToken(Set8ColorToken.ColorName.Magenta, true));
+                                    break;
+                                case "36":
+                                    toks.Add(new Set8ColorToken(Set8ColorToken.ColorName.Cyan, true));
+                                    break;
+                                case "37":
+                                    toks.Add(new Set8ColorToken(Set8ColorToken.ColorName.White, true));
+                                    break;
+                                default:
+                                    return null;
+                            }
+                        }
+
+                        return toks;
+
                     default:
                         return null;
                 }

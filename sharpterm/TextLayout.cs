@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using Veldrid;
 
 namespace SharpTerm
@@ -6,6 +7,27 @@ namespace SharpTerm
     public class TextLayout
     {
         private const uint TabWidth = 8;
+
+        private static readonly Dictionary<(Set8ColorToken.ColorName, bool), RgbaFloat> ColorLookup8 =
+            new Dictionary<(Set8ColorToken.ColorName, bool), RgbaFloat>
+            {
+                [(Set8ColorToken.ColorName.Black, false)]   = RgbaFloat.Black,
+                [(Set8ColorToken.ColorName.Red, false)]     = new RgbaFloat(205 / 255f, 0, 0, 1),
+                [(Set8ColorToken.ColorName.Green, false)]   = new RgbaFloat(0, 205 / 255f, 0, 1),
+                [(Set8ColorToken.ColorName.Yellow, false)]  = new RgbaFloat(205 / 255f, 205 / 255f, 0, 1),
+                [(Set8ColorToken.ColorName.Blue, false)]    = new RgbaFloat(0, 0, 238 / 255f, 1),
+                [(Set8ColorToken.ColorName.Magenta, false)] = new RgbaFloat(205 / 255f, 0, 205 / 255f, 1),
+                [(Set8ColorToken.ColorName.Cyan, false)]    = new RgbaFloat(0, 205 / 255f, 205 / 255f, 1),
+                [(Set8ColorToken.ColorName.White, false)]   = new RgbaFloat(229 / 255f, 229 / 255f, 229 / 255f, 1),
+                [(Set8ColorToken.ColorName.Black, true)]    = new RgbaFloat(0.5f, 0.5f, 0.5f, 1),
+                [(Set8ColorToken.ColorName.Red, true)]      = new RgbaFloat(1, 0, 0, 1),
+                [(Set8ColorToken.ColorName.Green, true)]    = new RgbaFloat(0, 1, 0, 1),
+                [(Set8ColorToken.ColorName.Yellow, true)]   = new RgbaFloat(1, 1, 0, 1),
+                [(Set8ColorToken.ColorName.Blue, true)]     = new RgbaFloat(92 / 255f, 92 / 255f, 1, 1),
+                [(Set8ColorToken.ColorName.Magenta, true)]  = new RgbaFloat(1, 0, 1, 1),
+                [(Set8ColorToken.ColorName.Cyan, true)]     = new RgbaFloat(0, 1, 1, 1),
+                [(Set8ColorToken.ColorName.White, true)]    = new RgbaFloat(1, 1, 1, 1)
+            };
         
         private readonly TextBuffer _buffer;
         
@@ -16,6 +38,8 @@ namespace SharpTerm
         
         public uint CursorLeft { get; set; }
         public uint CursorTop { get; set; }
+        
+        public bool IsBold { get; set; }
         
         public RgbaFloat ForeColor { get; set; }
 
@@ -44,6 +68,9 @@ namespace SharpTerm
                     MoveCursorBack();
                     // .. and clear the new cursor position
                     _buffer[CursorLeft, CursorTop] = null;
+                    break;
+                case '\u001b':
+                    Write('^');
                     break;
                 default:
                     // all other characters are copied to the buffer with proper
@@ -85,6 +112,19 @@ namespace SharpTerm
                     for (; i < end; ++i)
                         _buffer[i, CursorTop] = null;
                     
+                    break;
+                
+                case SgrResetToken _:
+                    ForeColor = RgbaFloat.White;
+                    break;
+                
+                case BoldToken bold:
+                    IsBold = bold.IsSet;
+                    break;
+                
+                case Set8ColorToken color:
+                    if (color.IsForeground)
+                        ForeColor = ColorLookup8[(color.Color, IsBold)];
                     break;
             }
         }
