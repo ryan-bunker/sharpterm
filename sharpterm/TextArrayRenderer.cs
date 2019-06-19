@@ -12,6 +12,7 @@ namespace SharpTerm
         private readonly DeviceBuffer _vertexBuffer;
         private readonly DeviceBuffer _indexBuffer;
         private readonly DeviceBuffer _worldBuffer;
+        private readonly DeviceBuffer _colorBuffer;
         private readonly Pipeline _pipeline;
         private readonly ResourceSet _projectionTextureResourceSet;
 
@@ -59,6 +60,9 @@ namespace SharpTerm
             // create the world matrix buffer
             _worldBuffer = factory.CreateBuffer(new BufferDescription(64, BufferUsage.UniformBuffer));
             
+            // create the color buffer
+            _colorBuffer = factory.CreateBuffer(new BufferDescription(16, BufferUsage.UniformBuffer));
+            
             // create vertex layout
             var vertexLayout = new VertexLayoutDescription(
                 new VertexElementDescription("Position", VertexElementSemantic.TextureCoordinate,
@@ -84,7 +88,8 @@ namespace SharpTerm
                 new ResourceLayoutElementDescription("ProjectionBuffer", ResourceKind.UniformBuffer, ShaderStages.Vertex),
                 new ResourceLayoutElementDescription("WorldBuffer", ResourceKind.UniformBuffer, ShaderStages.Vertex),
                 new ResourceLayoutElementDescription("SurfaceTexture", ResourceKind.TextureReadOnly, ShaderStages.Fragment),
-                new ResourceLayoutElementDescription("SurfaceSampler", ResourceKind.Sampler, ShaderStages.Fragment)));
+                new ResourceLayoutElementDescription("SurfaceSampler", ResourceKind.Sampler, ShaderStages.Fragment),
+                new ResourceLayoutElementDescription("ColorBuffer", ResourceKind.UniformBuffer, ShaderStages.Fragment)));
             _projectionTextureResourceSet = factory.CreateResourceSet(new ResourceSetDescription(
                 projectionTextureResourceLayout,
                 projectionBuffer,
@@ -100,7 +105,8 @@ namespace SharpTerm
                     MinimumLod = 0,
                     MaximumLod = uint.MaxValue,
                     MaximumAnisotropy = 4
-                })));
+                }),
+                _colorBuffer));
 
             // create pipeline
             _pipeline = factory.CreateGraphicsPipeline(new GraphicsPipelineDescription
@@ -138,17 +144,19 @@ namespace SharpTerm
                 for (uint col = 0; col < textArray.Width; ++col)
                 {
                     var c = textArray[col, row];
-                    if (c == null || c <= ' ') continue;
+                    if (c == null || c.Char <= ' ') continue;
                     
                     cl.UpdateBuffer(_worldBuffer, 0, 
                         Matrix4x4.CreateTranslation(
                             col, row, 0));
                     
+                    cl.UpdateBuffer(_colorBuffer, 0, c.ForeColor);
+                    
                     cl.DrawIndexed(
                         indexCount: 4,
                         instanceCount: 1,
                         indexStart: 0,
-                        vertexOffset: (int)c * 4,
+                        vertexOffset: c.Char * 4,
                         instanceStart: 0);
                 }
             }
@@ -232,11 +240,15 @@ layout(location = 0) out vec4 fsout_Color;
 
 layout(set = 0, binding = 2) uniform texture2D SurfaceTexture;
 layout(set = 0, binding = 3) uniform sampler SurfaceSampler;
+layout(set = 0, binding = 4) uniform ColorBuffer
+{
+    vec4 PolyColor;
+};
 
 void main()
 {
     float c = texture(sampler2D(SurfaceTexture, SurfaceSampler), fsin_TexCoords).r;
-    fsout_Color = vec4(c, c, c, 1) * fsin_Color;
+    fsout_Color = PolyColor * vec4(c, c, c, 1) * fsin_Color;
 }";
     }
 }

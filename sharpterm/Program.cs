@@ -80,7 +80,7 @@ namespace GettingStarted
             var buffer = new TextBuffer((uint)charsWidth, 1000);
             _textWindow = new BufferWindow(buffer, buffer.Width, (uint)charsHeight);
             _textRenderer = new TextArrayRenderer(_graphicsDevice, _fontAtlas, _projectionBuffer);
-            _textLayout = new TextLayout(buffer);
+            _textLayout = new TextLayout(buffer) {ForeColor = RgbaFloat.White};
             
             _commandList = _graphicsDevice.ResourceFactory.CreateCommandList();
         }

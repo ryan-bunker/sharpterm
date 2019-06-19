@@ -1,4 +1,5 @@
 using System;
+using Veldrid;
 
 namespace SharpTerm
 {
@@ -15,6 +16,8 @@ namespace SharpTerm
         
         public uint CursorLeft { get; set; }
         public uint CursorTop { get; set; }
+        
+        public RgbaFloat ForeColor { get; set; }
 
         private void Write(char c)
         {
@@ -45,7 +48,7 @@ namespace SharpTerm
                 default:
                     // all other characters are copied to the buffer with proper
                     // line wrapping
-                    _buffer[CursorLeft, CursorTop] = c;
+                    _buffer[CursorLeft, CursorTop] = new CharCell(c, ForeColor);
                     MoveCursorForward();
                     break;
             }

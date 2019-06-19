@@ -17,6 +17,6 @@ namespace SharpTerm
         public uint OffsetX { get; set; }
         public uint OffsetY { get; set; }
         
-        public char? this[uint col, uint row] => _sourceBuffer[col + OffsetX, row + OffsetY];
+        public CharCell this[uint col, uint row] => _sourceBuffer[col + OffsetX, row + OffsetY];
     }
 }
