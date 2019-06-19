@@ -1,3 +1,5 @@
+using System;
+
 namespace SharpTerm
 {
     public class TextLayout
@@ -14,15 +16,13 @@ namespace SharpTerm
         public uint CursorLeft { get; set; }
         public uint CursorTop { get; set; }
 
-        public void Write(string s)
-        {
-            foreach (var c in s) Write(c);
-        }
-
-        public void Write(char c)
+        private void Write(char c)
         {
             switch (c)
             {
+                case '\a':
+                    // TODO: make a bell sound
+                    break;
                 case '\r':
                     // carriage return means to go back to the far left of the
                     // text array, so reset CursorLeft
@@ -47,6 +47,41 @@ namespace SharpTerm
                     // line wrapping
                     _buffer[CursorLeft, CursorTop] = c;
                     MoveCursorForward();
+                    break;
+            }
+        }
+
+        public void Write(Token t)
+        {
+            switch (t)
+            {
+                case CharToken ct:
+                    Write(ct.Char);
+                    break;
+                
+                case EraseLineToken erase:
+                    uint i, end;
+                    switch (erase.Bounds)
+                    {
+                        case EraseLineToken.EraseBounds.BeginningToCursor:
+                            i = 0;
+                            end = CursorLeft;
+                            break;
+                        case EraseLineToken.EraseBounds.CursorToEnd:
+                            i = CursorLeft;
+                            end = _buffer.Width;
+                            break;
+                        case EraseLineToken.EraseBounds.BeginningToEnd:
+                            i = 0;
+                            end = _buffer.Width;
+                            break;
+                        default:
+                            throw new ArgumentOutOfRangeException();
+                    }
+
+                    for (; i < end; ++i)
+                        _buffer[i, CursorTop] = null;
+                    
                     break;
             }
         }

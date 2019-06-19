@@ -16,6 +16,7 @@ namespace GettingStarted
         private static DeviceBuffer _projectionBuffer;
 
         private static FontAtlas _fontAtlas;
+        private static OutputTokenizer _tokenizer;
         private static TextLayout _textLayout;
         private static BufferWindow _textWindow;
         private static TextArrayRenderer _textRenderer;
@@ -44,6 +45,8 @@ namespace GettingStarted
             var charsHeight = (int)(window.Height / (float) _fontAtlas.CellHeight);
             pty.SetSize(charsWidth, charsHeight);
             
+            _tokenizer = new OutputTokenizer(_textLayout);
+
             var inputProcessor = new InputKeyStreamer {OutStream = writeStream};
 #pragma warning disable 4014
             PipePtyToScreen(readStream);
@@ -89,7 +92,7 @@ namespace GettingStarted
             {
                 int read = await readStream.ReadAsync(buffer, 0, buffer.Length);
                 for (int i = 0; i < read; ++i)
-                    _textLayout.Write((char) buffer[i]);
+                    _tokenizer.Process((char) buffer[i]);
             }
         }
 
