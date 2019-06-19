@@ -2,6 +2,8 @@ namespace SharpTerm
 {
     public class TextLayout : ITextWriter
     {
+        private const uint TabWidth = 8;
+        
         private readonly TextBuffer _buffer;
         
         public TextLayout(TextBuffer buffer)
@@ -32,7 +34,7 @@ namespace SharpTerm
                     break;
                 case '\t':
                     // move the cursor to the next tab stop
-                    CursorLeft = ((CursorLeft >> 2) << 2) + 4;
+                    CursorLeft += TabWidth - (CursorLeft % TabWidth);
                     break;
                 case '\b':
                     // move the cursor back..

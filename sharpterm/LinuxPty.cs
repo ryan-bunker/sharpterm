@@ -15,9 +15,23 @@ namespace SharpTerm
         [DllImport("libc")]
         private static extern int execv(string pathname, string[] argv);
 
+        [DllImport("libc")]
+        private static extern int ioctl(int fd, uint cmd, ref winsize ws);
+        
+        [StructLayout(LayoutKind.Sequential)]
+        private struct winsize
+        {
+            public ushort ws_row;
+            public ushort ws_col;
+            public ushort ws_xpixel;   /* unused */
+            public ushort ws_ypixel;   /* unused */
+        }
+
+        private readonly int _masterPtyFd;
+
         public LinuxPty()
         {
-            var pid = forkpty(out int masterFd, null, IntPtr.Zero, IntPtr.Zero);
+            var pid = forkpty(out _masterPtyFd, null, IntPtr.Zero, IntPtr.Zero);
             if (0 == pid)
             {
                 // this is the child
@@ -25,13 +39,19 @@ namespace SharpTerm
             }
             else
             {
-                ReadStream = new FileStream(new SafeFileHandle(new IntPtr(masterFd), false), FileAccess.Read);
-                WriteStream = new FileStream(new SafeFileHandle(new IntPtr(masterFd), false), FileAccess.Write);
+                ReadStream = new FileStream(new SafeFileHandle(new IntPtr(_masterPtyFd), false), FileAccess.Read);
+                WriteStream = new FileStream(new SafeFileHandle(new IntPtr(_masterPtyFd), false), FileAccess.Write);
             }
         }
         
         public Stream ReadStream { get; }
         
         public Stream WriteStream { get; }
+
+        public void SetSize(int width, int height)
+        {
+            var ws = new winsize {ws_col = (ushort)width, ws_row = (ushort)height};
+            ioctl(_masterPtyFd, 0x5414, ref ws);
+        }
     }
 }

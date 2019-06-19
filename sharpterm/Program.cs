@@ -15,6 +15,7 @@ namespace GettingStarted
 
         private static DeviceBuffer _projectionBuffer;
 
+        private static FontAtlas _fontAtlas;
         private static TextLayout _textLayout;
         private static BufferWindow _textWindow;
         private static TextArrayRenderer _textRenderer;
@@ -39,6 +40,10 @@ namespace GettingStarted
             var readStream =  new ConsoleLoggingStream(pty.ReadStream, "READ");
             var writeStream = new ConsoleLoggingStream(pty.WriteStream, "WRIT");
 
+            var charsWidth = (int)(window.Width / (float) _fontAtlas.CellWidth);
+            var charsHeight = (int)(window.Height / (float) _fontAtlas.CellHeight);
+            pty.SetSize(charsWidth, charsHeight);
+            
             var inputProcessor = new InputKeyStreamer {OutStream = writeStream};
 #pragma warning disable 4014
             PipePtyToScreen(readStream);
@@ -58,20 +63,20 @@ namespace GettingStarted
         private static void CreateResources(Sdl2Window window)
         {
             // load font and build texture atlas
-            var fontAtlas = new FontAtlas(_graphicsDevice, @"./Inconsolata-Regular.ttf", 36);
+            _fontAtlas = new FontAtlas(_graphicsDevice, @"./Inconsolata-Regular.ttf", 36);
             
             _projectionBuffer = _graphicsDevice.ResourceFactory.CreateBuffer(new BufferDescription(64, BufferUsage.UniformBuffer));
 
             // Update our projection
-            var charsWidth = window.Width / (float) fontAtlas.CellWidth;
-            var charsHeight = window.Height / (float) fontAtlas.CellHeight;
+            var charsWidth = window.Width / (float) _fontAtlas.CellWidth;
+            var charsHeight = window.Height / (float) _fontAtlas.CellHeight;
             var scale = Matrix4x4.CreateScale(2f / charsWidth, -2f / charsHeight, 1);
             var translate = Matrix4x4.CreateTranslation(-1f, 1f, 0);
             _graphicsDevice.UpdateBuffer(_projectionBuffer, 0, scale * translate);
             
             var buffer = new TextBuffer((uint)charsWidth, 1000);
             _textWindow = new BufferWindow(buffer, buffer.Width, (uint)charsHeight);
-            _textRenderer = new TextArrayRenderer(_graphicsDevice, fontAtlas, _projectionBuffer);
+            _textRenderer = new TextArrayRenderer(_graphicsDevice, _fontAtlas, _projectionBuffer);
             _textLayout = new TextLayout(buffer);
             
             _commandList = _graphicsDevice.ResourceFactory.CreateCommandList();
