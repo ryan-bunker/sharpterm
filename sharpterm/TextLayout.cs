@@ -1,6 +1,6 @@
 namespace SharpTerm
 {
-    public class TextLayout : ITextWriter
+    public class TextLayout
     {
         private const uint TabWidth = 8;
         
