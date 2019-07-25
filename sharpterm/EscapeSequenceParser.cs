@@ -1,3 +1,4 @@
+#nullable enable
 using System.Collections.Generic;
 using Veldrid;
 
@@ -5,7 +6,7 @@ namespace SharpTerm
 {
     public class EscapeSequenceParser
     {
-        private Parser _parser;
+        private Parser? _parser = null;
         private readonly List<char> _chars = new List<char>();
         
         public bool? Process(char c)
@@ -28,14 +29,14 @@ namespace SharpTerm
             return _parser.Process(c);
         }
 
-        public IEnumerable<Token> GetToken() => _parser.GetToken();
+        public IEnumerable<Token>? GetToken() => _parser?.GetToken();
 
         public char[] GetChars() => _chars.ToArray();
 
         private abstract class Parser
         {
             public abstract bool? Process(in char c);
-            public abstract IEnumerable<Token> GetToken();
+            public abstract IEnumerable<Token>? GetToken();
         }
 
         private class CsiParser : Parser
@@ -94,7 +95,7 @@ namespace SharpTerm
                 return false;
             }
 
-            public override IEnumerable<Token> GetToken()
+            public override IEnumerable<Token>? GetToken()
             {
                 switch (_finalByte)
                 {

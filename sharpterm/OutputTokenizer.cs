@@ -1,9 +1,10 @@
+#nullable enable
 namespace SharpTerm
 {
     public class OutputTokenizer
     {
         private readonly TextLayout _output;
-        private EscapeSequenceParser _escapeParser;
+        private EscapeSequenceParser? _escapeParser;
 
         public OutputTokenizer(TextLayout output)
         {
@@ -50,9 +51,10 @@ namespace SharpTerm
         private void FlushEscapeParser()
         {
             WriteCharToOutput('\u001b');
-            var chars = _escapeParser.GetChars();
-            foreach (var c in chars)
-                WriteCharToOutput(c);
+            var chars = _escapeParser?.GetChars();
+            if (chars != null)
+                foreach (var c in chars)
+                    WriteCharToOutput(c);
             _escapeParser = null;
         }
     }

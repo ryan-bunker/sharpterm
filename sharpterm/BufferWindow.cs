@@ -1,3 +1,4 @@
+#nullable enable
 namespace SharpTerm
 {
     public class BufferWindow : ITextArray
@@ -17,6 +18,6 @@ namespace SharpTerm
         public uint OffsetX { get; set; }
         public uint OffsetY { get; set; }
         
-        public CharCell this[uint col, uint row] => _sourceBuffer[col + OffsetX, row + OffsetY];
+        public CharCell? this[uint col, uint row] => _sourceBuffer[col + OffsetX, row + OffsetY];
     }
 }

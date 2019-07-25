@@ -1,4 +1,6 @@
-﻿using System;
+﻿#nullable disable
+#pragma warning disable
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Numerics;
@@ -360,3 +362,4 @@ void main()
     }
 
 }
+#pragma warning restore

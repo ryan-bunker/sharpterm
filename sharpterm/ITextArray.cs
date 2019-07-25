@@ -1,3 +1,4 @@
+#nullable enable
 namespace SharpTerm
 {
     public interface ITextArray
@@ -5,6 +6,6 @@ namespace SharpTerm
         uint Width { get; }
         uint Height { get; }
         
-        CharCell this[uint col, uint row] { get; }
+        CharCell? this[uint col, uint row] { get; }
     }
 }

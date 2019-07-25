@@ -1,3 +1,4 @@
+#nullable enable
 using System;
 using System.IO;
 using System.Runtime.InteropServices;
@@ -10,10 +11,10 @@ namespace SharpTerm
         private const int TCSANOW = 1;
         
         [DllImport("libutil")]
-        private static extern int forkpty(out int amaster, string name, IntPtr termp, IntPtr winp);
+        private static extern int forkpty(out int amaster, string? name, IntPtr termp, IntPtr winp);
 
         [DllImport("libc")]
-        private static extern int execv(string pathname, string[] argv);
+        private static extern int execv(string pathname, string?[] argv);
 
         [DllImport("libc")]
         private static extern int ioctl(int fd, uint cmd, ref winsize ws);
@@ -36,6 +37,12 @@ namespace SharpTerm
             {
                 // this is the child
                 execv("/bin/sh", new[] {"/bin/sh", null});
+
+                // we'll never actually hit this because execv on linux never returns
+                // since it switches the process execution to the listed program, however
+                // the compiler can't know that so we include a throw here so it doesn't
+                // expect this code path to fully initialize everything
+                throw new Exception();
             }
             else
             {
