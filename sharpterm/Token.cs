@@ -14,6 +14,18 @@ namespace SharpTerm
         public CharToken(char c) => Char = c;
     }
 
+    public class SetCursorLocationToken : Token
+    {
+        public uint Left { get; }
+        public uint Top { get; }
+
+        public SetCursorLocationToken(uint left, uint top)
+        {
+            Left = left;
+            Top = top;
+        }
+    }
+
     public class EraseScreenToken : Token
     {
         public enum EraseBounds

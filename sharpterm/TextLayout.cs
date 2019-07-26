@@ -90,6 +90,11 @@ namespace SharpTerm
                     Write(ct.Char);
                     break;
 
+                case SetCursorLocationToken setCursor:
+                    CursorLeft = setCursor.Left - 1;
+                    CursorTop = setCursor.Top - 1;
+                    break;
+
                 case EraseScreenToken eraseScreen:
                     switch (eraseScreen.Bounds)
                     {

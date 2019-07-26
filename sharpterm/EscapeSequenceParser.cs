@@ -1,4 +1,5 @@
 #nullable enable
+using System;
 using System.Collections.Generic;
 using Veldrid;
 
@@ -99,6 +100,19 @@ namespace SharpTerm
             {
                 switch (_finalByte)
                 {
+                    case 'H':
+                    {
+                        var @params = _params.ToArray();
+                        int splitIdx = _params.IndexOf(';');
+                        if (splitIdx < 0)
+                            return new[] {new SetCursorLocationToken(1, 1)};
+                        var left = new ReadOnlySpan<char>(@params, 0, splitIdx);
+                        var right = new ReadOnlySpan<char>(@params, splitIdx + 1, @params.Length - splitIdx);
+                        var y = left.Length > 0 ? uint.Parse(left) : 1;
+                        var x = right.Length > 0 ? uint.Parse(right) : 1;
+                        return new[] {new SetCursorLocationToken(x, y)};
+                    }
+
                     case 'J':
                     {
                         EraseScreenToken.EraseBounds bounds;
