@@ -99,7 +99,26 @@ namespace SharpTerm
             {
                 switch (_finalByte)
                 {
+                    case 'J':
+                    {
+                        EraseScreenToken.EraseBounds bounds;
+                        if (_params.Count > 1)
+                            return null;
+                        else if (_params.Count == 0 || _params[0] == '0')
+                            bounds = EraseScreenToken.EraseBounds.CursorToEnd;
+                        else if (_params[0] == '1')
+                            bounds = EraseScreenToken.EraseBounds.BeginningToCursor;
+                        else if (_params[0] == '2')
+                            bounds = EraseScreenToken.EraseBounds.EntireScreen;
+                        else if (_params[0] == '3')
+                            bounds = EraseScreenToken.EraseBounds.EntireScreenAndScrollback;
+                        else
+                            return null;
+                        return new[] {new EraseScreenToken(bounds)};
+                    }
+
                     case 'K':
+                    {
                         EraseLineToken.EraseBounds bounds;
                         if (_params.Count > 1)
                             return null;
@@ -112,6 +131,7 @@ namespace SharpTerm
                         else
                             return null;
                         return new[] {new EraseLineToken(bounds)};
+                    }
                     
                     case 'm':
                         var codes = new string(_params.ToArray()).Split(';');

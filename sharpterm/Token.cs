@@ -14,6 +14,24 @@ namespace SharpTerm
         public CharToken(char c) => Char = c;
     }
 
+    public class EraseScreenToken : Token
+    {
+        public enum EraseBounds
+        {
+            BeginningToCursor,
+            CursorToEnd,
+            EntireScreen,
+            EntireScreenAndScrollback
+        }
+        
+        public EraseBounds Bounds { get; }
+
+        public EraseScreenToken(EraseBounds bounds)
+        {
+            Bounds = bounds;
+        }
+    }
+
     public class EraseLineToken : Token
     {
         public enum EraseBounds

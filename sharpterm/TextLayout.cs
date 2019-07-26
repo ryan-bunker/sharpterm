@@ -89,6 +89,29 @@ namespace SharpTerm
                 case CharToken ct:
                     Write(ct.Char);
                     break;
+
+                case EraseScreenToken eraseScreen:
+                    switch (eraseScreen.Bounds)
+                    {
+                        case EraseScreenToken.EraseBounds.EntireScreen:
+                            // TODO: this is only supposed to clear the screen but we're clearing the entire buffer
+                            for (uint y = 0; y < _buffer.Height; ++y)
+                                for (uint x = 0; x < _buffer.Width; ++x)
+                                    _buffer[x, y] = null;
+                            CursorLeft = 0;
+                            CursorTop = 0;
+                            break;
+
+                        case EraseScreenToken.EraseBounds.EntireScreenAndScrollback:
+                            for (uint y = 0; y < _buffer.Height; ++y)
+                                for (uint x = 0; x < _buffer.Width; ++x)
+                                    _buffer[x, y] = null;
+                            break;
+
+                        default:
+                            throw new ArgumentOutOfRangeException();
+                    }
+                    break;
                 
                 case EraseLineToken erase:
                     uint i, end;
